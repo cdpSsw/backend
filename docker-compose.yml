@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  node-server:
+    container_name: node-server-new
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: db
+      DB_USER: admin
+      DB_PASSWORD: root
+      DB_NAME: comenspu_database
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    container_name: db-new
+    image: mysql:latest
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: comenspu_database
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+
+  phpmyadmin:
+    container_name: phpmyadmin-new
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: admin
+      PMA_PASSWORD: root
+      PMA_PORT: 3306
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  db-data:
+    driver: local
